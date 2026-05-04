@@ -54,13 +54,19 @@ namespace dlib
         }
         else
         {
+            if (!cuda::use_cuda())
+            {
+                std::memcpy(dest.host()+dest_offset, src.host()+src_offset, num*sizeof(float));
+                return;
+            }
+
             // if we write to the entire thing then we can use device_write_only()
             if (dest_offset == 0 && num == dest.size())
             {
                 // copy the memory efficiently based on which copy is current in each object.
                 if (src.device_ready())
                     CHECK_CUDA(cudaMemcpy(dest.device_write_only(), src.device()+src_offset,  num*sizeof(float), cudaMemcpyDeviceToDevice));
-                else 
+                else
                     CHECK_CUDA(cudaMemcpy(dest.device_write_only(), src.host()+src_offset,    num*sizeof(float), cudaMemcpyHostToDevice));
             }
             else
@@ -72,7 +78,7 @@ namespace dlib
                     CHECK_CUDA(cudaMemcpy(dest.host()+dest_offset, src.device()+src_offset,   num*sizeof(float), cudaMemcpyDeviceToHost));
                 else if (dest.device_ready() && !src.device_ready())
                     CHECK_CUDA(cudaMemcpy(dest.device()+dest_offset, src.host()+src_offset,   num*sizeof(float), cudaMemcpyHostToDevice));
-                else 
+                else
                     CHECK_CUDA(cudaMemcpy(dest.host()+dest_offset, src.host()+src_offset,     num*sizeof(float), cudaMemcpyHostToHost));
             }
         }
@@ -147,6 +153,9 @@ namespace dlib
     void gpu_data::
     async_copy_to_device() const
     {
+        if (!cuda::use_cuda())
+            return;
+
         if (!device_current)
         {
             if (device_in_use)
@@ -181,6 +190,7 @@ namespace dlib
             host_current = true;
             device_current = true;
             device_in_use = false;
+            the_device_id = 0;
             data_host.reset();
             data_device.reset();
         }
@@ -198,6 +208,13 @@ namespace dlib
             host_current = true;
             device_current = true;
             device_in_use = false;
+
+            if (!cuda::use_cuda())
+            {
+                data_host.reset(new float[new_size], std::default_delete<float[]>());
+                the_device_id = 0;
+                return;
+            }
 
             try
             {
@@ -251,4 +268,3 @@ namespace dlib
 #endif // DLIB_USE_CUDA
 
 #endif // DLIB_GPU_DaTA_CPP_
-

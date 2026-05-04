@@ -14,6 +14,14 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    namespace cuda
+    {
+        bool use_cuda(
+        );
+    }
+
+// ----------------------------------------------------------------------------------------
+
     class gpu_data 
     {
         /*!
@@ -108,6 +116,8 @@ namespace dlib
         { 
 #ifndef DLIB_USE_CUDA
             DLIB_CASSERT(false, "CUDA NOT ENABLED");
+#else
+            DLIB_CASSERT(cuda::use_cuda(), "CUDA disabled");
 #endif
             copy_to_device();
             device_in_use = true;
@@ -118,6 +128,8 @@ namespace dlib
         {
 #ifndef DLIB_USE_CUDA
             DLIB_CASSERT(false, "CUDA NOT ENABLED");
+#else
+            DLIB_CASSERT(cuda::use_cuda(), "CUDA disabled");
 #endif
             copy_to_device();
             host_current = false;
@@ -129,6 +141,8 @@ namespace dlib
         {
 #ifndef DLIB_USE_CUDA
             DLIB_CASSERT(false, "CUDA NOT ENABLED");
+#else
+            DLIB_CASSERT(cuda::use_cuda(), "CUDA disabled");
 #endif
             wait_for_transfer_to_finish();
             host_current = false;
@@ -141,7 +155,14 @@ namespace dlib
         ) const { return host_current; }
 
         bool device_ready (
-        ) const { return device_current && !have_active_transfer; }
+        ) const
+        {
+#ifdef DLIB_USE_CUDA
+            if (!cuda::use_cuda() && size() != 0)
+                return false;
+#endif
+            return device_current && !have_active_transfer;
+        }
 
         size_t size() const { return data_size; }
 
@@ -263,4 +284,3 @@ namespace dlib
 }
 
 #endif // DLIB_GPU_DaTA_H_
-

@@ -25,6 +25,9 @@ namespace dlib
         int get_num_devices (
         );
 
+        bool use_cuda(
+        );
+
         std::string get_device_name (
             int device
         );
@@ -941,6 +944,9 @@ namespace dlib
 
         inline int get_num_devices (
         ) { return 1; }
+
+        inline bool use_cuda(
+        ) { return false; }
 
         inline std::string get_device_name (
             int device

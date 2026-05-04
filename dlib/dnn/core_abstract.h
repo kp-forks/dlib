@@ -196,6 +196,23 @@ namespace dlib
             - #dnn_prefer_fastest_algorithms() == false 
     !*/
 
+    namespace cuda
+    {
+        bool use_cuda(
+        );
+        /*!
+            ensures
+                - If dlib will use CUDA then this function returns true and false otherwise.
+                - This function returns true if DLIB_USE_CUDA is defined,
+                  the DLIB_DISABLE_CUDA_USE environment variable is not set to a true value,
+                  and there is an available GPU device to use.
+                - This function always returns false if DLIB_USE_CUDA is not defined.
+                - A true value of DLIB_DISABLE_CUDA_USE is any value other than "",
+                  "0", "false", "False", or "FALSE".
+                - The value returned by this function is fixed after its first call.
+        !*/
+    }
+
 // ----------------------------------------------------------------------------------------
 
     template <
